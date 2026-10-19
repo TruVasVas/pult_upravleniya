@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+node_modules/
+data/
+playwright-report/
+test-results/
+.DS_Store

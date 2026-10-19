@@ -1,0 +1,87 @@
+import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const project=fileURLToPath(new URL('..',import.meta.url));
+const port=process.env.TEST_PORT||'3100';
+const base=`http://127.0.0.1:${port}`;
+const server=spawn(process.execPath,['server.mjs'],{cwd:project,env:{...process.env,PORT:port,HOST:'127.0.0.1'},stdio:['ignore','pipe','pipe']});
+let browser;
+try{
+ for(let i=0;i<50;i++){try{const r=await fetch(base+'/health');if(r.ok)break}catch{}await new Promise(r=>setTimeout(r,100))}
+ assert.equal((await fetch(base+'/health')).status,200);
+ assert.equal((await fetch(base+'/.env')).status,404);
+ assert.equal((await fetch(base,{method:'POST'})).status,405);
+ browser=await chromium.launch({...process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{},args:['--no-sandbox']});
+ const context=await browser.newContext({viewport:{width:1280,height:1000}});
+ const page=await context.newPage();
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});
+ await page.goto(base);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
+ const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','crm','stock','supplies','taxes','documents','integrations','tasks'];
+ for(const width of [1280,375]){
+  await page.setViewportSize({width,height:900});
+  for(const route of paths){
+   await page.goto(base+'/#'+route);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
+   assert.ok(await page.locator('main h1').textContent(),`heading ${route}`);
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,`no overflow: ${route} at ${width}`);
+   const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
+   assert.deepEqual(audit.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)})),[],`a11y ${route} ${width}`);
+   await page.screenshot({path:new URL(`../test-results/${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
+  }
+  console.log(`PASS 14 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
+ }
+ await page.setViewportSize({width:1280,height:1000});
+ await page.goto(base+'/#tasks');
+ await page.getByRole('button',{name:'Создать задачу',exact:true}).first().click();
+ await page.getByRole('button',{name:'Создать задачу',exact:true}).last().click();
+ assert.equal(await page.locator('#f-title').getAttribute('aria-invalid'),'true');
+ await page.getByLabel('Название задачи',{exact:true}).fill('Проверить новую коллекцию');
+ await page.getByRole('button',{name:'Создать задачу',exact:true}).last().click();
+ await page.getByRole('button',{name:'Проверить новую коллекцию',exact:true}).click();
+ await page.getByLabel('Название задачи',{exact:true}).fill('Проверить новую коллекцию — обновлено');
+ await page.getByRole('button',{name:'Сохранить изменения',exact:true}).click();
+ const task=page.locator('.task-card').filter({has:page.getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true})});
+ await task.locator('select').selectOption('1');
+ assert.equal(await page.locator('[data-drop-stage="1"]').getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true}).count(),1);
+ await page.reload();assert.equal(await page.getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true}).count(),1);
+ await page.locator('.task-card').filter({has:page.getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true})}).dragTo(page.locator('[data-drop-kind="task"][data-drop-stage="0"]'));
+ assert.equal(await page.locator('[data-drop-stage="0"]').getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true}).count(),1);
+ await page.goto(base+'/#crm');await page.getByRole('button',{name:'Добавить сделку',exact:true}).click();
+ await page.getByLabel('Название сделки',{exact:true}).fill('Тестовый мерч');await page.getByLabel('Компания / клиент',{exact:true}).fill('Команда теста');await page.getByLabel('Сумма, ₽',{exact:true}).fill('75000');
+ await page.getByRole('button',{name:'Добавить сделку',exact:true}).last().click();
+ await page.getByRole('button',{name:'Тестовый мерч',exact:true}).click();await page.getByLabel('Сумма, ₽',{exact:true}).fill('85000');await page.getByRole('button',{name:'Сохранить изменения',exact:true}).click();
+ await page.locator('.task-card').filter({has:page.getByRole('heading',{name:'Тестовый мерч',exact:true})}).locator('select').selectOption('3');
+ await page.reload();assert.equal(await page.locator('[data-drop-stage="3"]').getByRole('heading',{name:'Тестовый мерч',exact:true}).count(),1);
+ console.log('PASS tasks/deals: required fields, create, edit, change status, reload persistence');
+ await page.goto(base+'/#decisions');const first=page.locator('.decision-card').first();const title=await first.locator('h2').textContent();const steps=await first.locator('li').count();
+ await first.getByRole('button',{name:'Принять',exact:true}).click();await page.getByRole('button',{name:/^В работе/}).click();assert.equal(await page.getByRole('heading',{name:title,exact:true}).count(),1);
+ await page.goto(base+'/#tasks');let autoTasks=await page.locator('.task-card').count();assert.ok(autoTasks>=7+steps);
+ const stored=await page.evaluate(()=>JSON.parse(localStorage.getItem('brandos-demo-v1')));const accepted=stored.decisions.find(d=>d.title===title);assert.equal(accepted.taskIds.length,steps);
+ for(const id of accepted.taskIds)await page.locator(`[data-task-status="${id}"]`).selectOption('2');
+ await page.goto(base+'/#decisions');await page.getByRole('button',{name:/^Выполнены/}).click();assert.equal(await page.getByRole('heading',{name:title,exact:true}).count(),1);
+ await page.getByRole('button',{name:/^Новые/}).click();const next=page.locator('.decision-card').first();const snoozed=await next.locator('h2').textContent();await next.getByRole('button',{name:/^Отложить .* на 3 дня$/}).click();await page.getByRole('button',{name:/^Отложены/}).click();assert.equal(await page.getByRole('heading',{name:snoozed,exact:true}).count(),1);
+ await page.getByRole('button',{name:/^Новые/}).click();const rejected=await page.locator('.decision-card').first().locator('h2').textContent();await page.locator('.decision-card').first().getByRole('button',{name:'Отклонить',exact:true}).click();await page.getByLabel('Причина отклонения').fill('Нет бюджета на этой неделе');await page.getByRole('button',{name:'Отклонить решение',exact:true}).click();await page.getByRole('button',{name:/^Отклонены/}).click();assert.equal(await page.getByRole('heading',{name:rejected,exact:true}).count(),1);assert.ok(await page.getByText('Причина: Нет бюджета на этой неделе').count());
+ console.log('PASS decisions: accept creates tasks, progress, completion, defer, reject with reason');
+ await page.goto(base+'/#documents');
+ await page.locator('#uploadInput').setInputFiles({name:'invoice-test.txt',mimeType:'text/plain',buffer:Buffer.from('Тестовый счёт 123')});
+ await page.getByRole('row').filter({hasText:'invoice-test.txt'}).getByRole('button',{name:/Открыть/}).click();
+ const downloaded=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать оригинал'}).click();assert.equal((await downloaded).suggestedFilename(),'invoice-test.txt');
+ await page.getByRole('button',{name:'Закрыть панель'}).click();await page.reload();await page.getByRole('row').filter({hasText:'invoice-test.txt'}).getByRole('button',{name:/Открыть/}).click();
+ const downloaded2=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать оригинал'}).click();assert.equal((await downloaded2).suggestedFilename(),'invoice-test.txt');
+ await page.getByRole('button',{name:'Отметить проверенным'}).click();await page.locator('#docStatus').selectOption('Обработан');assert.equal(await page.getByRole('row').filter({hasText:'invoice-test.txt'}).count(),1);
+ const csv=page.waitForEvent('download');await page.getByRole('button',{name:'Экспорт списка'}).click();assert.ok((await csv).suggestedFilename().endsWith('.csv'));
+ console.log('PASS documents: upload, IndexedDB file survives reload, original download, status/filter, CSV export');
+ await page.goto(base);const before=await page.locator('.kpi-value').first().textContent();await page.locator('#periodSelect').selectOption('week');assert.notEqual(await page.locator('.kpi-value').first().textContent(),before);
+ await page.locator('#globalSearch').fill('Проверить новую коллекцию');await page.locator('#searchResults button').first().click();assert.equal(await page.getByLabel('Название задачи',{exact:true}).inputValue(),'Проверить новую коллекцию — обновлено');await page.keyboard.press('Escape');
+ await page.locator('.assistant-trigger').click();await page.getByLabel('Сообщение ассистенту').fill('Что с деньгами?');await page.getByRole('button',{name:'Отправить сообщение'}).click();assert.ok((await page.locator('.chat-message').last().textContent()).includes('кассовый разрыв'));
+ const focusBefore=await page.evaluate(()=>document.activeElement.outerHTML);await page.keyboard.press('Shift+Tab');assert.ok(await page.evaluate(()=>document.getElementById('drawer').contains(document.activeElement)));await page.keyboard.press('Escape');assert.equal(await page.locator('#drawer').getAttribute('inert'),'');
+ console.log('PASS period selection, global search, assistant, drawer keyboard focus and Escape');
+ await page.setViewportSize({width:375,height:812});await page.getByLabel('Открыть меню',{exact:true}).click();assert.equal(await page.getByLabel('Открыть меню',{exact:true}).getAttribute('aria-expanded'),'true');await page.locator('.nav [data-route="crm"]').click();assert.equal(await page.getByRole('heading',{name:'CRM',exact:true}).count(),1);assert.equal(await page.locator('#navScrim').isHidden(),true);
+ await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches),true);
+ console.log('PASS mobile menu, route navigation, reduced-motion preference');
+ assert.deepEqual(errors,[],'No runtime JS errors');
+ console.log('PASS all browser checks');
+}finally{await browser?.close();server.kill('SIGTERM')}

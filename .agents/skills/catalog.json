@@ -1,0 +1,67 @@
+{
+  "skills": [
+    {
+      "name": "marketplace-api",
+      "path": "marketplace-api/SKILL.md",
+      "source_file": "SKILL (2).md",
+      "source_sha256": "136741124fd541322aa989985cdc865a501e8c2611fe7d239c3ec56d4b6ce87e",
+      "companions_supplied": false
+    },
+    {
+      "name": "accessibility-review",
+      "path": "accessibility-review/SKILL.md",
+      "source_file": "SKILL (8).md",
+      "source_sha256": "ef42982af0d51238dda2ab16d08626712891bdd41864876c32d1e7b13fb3124f",
+      "companions_supplied": false
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "path": "ui-ux-pro-max/SKILL.md",
+      "source_file": "SKILL (1).md",
+      "source_sha256": "fff024e58ee4aeef4f06d3ec93bbf4aa0c6af12ec8e680182fa60d90d7f070e4",
+      "companions_supplied": false
+    },
+    {
+      "name": "frontend-design",
+      "path": "frontend-design/SKILL.md",
+      "source_file": "SKILL.md",
+      "source_sha256": "d91970639e9f5c37682ac7ab60094d35f1c7c1f38d731bd56396563aee10c1d3",
+      "companions_supplied": false
+    },
+    {
+      "name": "viewports",
+      "path": "viewports/SKILL.md",
+      "source_file": "SKILL (5).md",
+      "source_sha256": "e2955c9d2cf10f709cddef0ab048397e78edc7981af42498a96f4da2908b5d9c",
+      "companions_supplied": false
+    },
+    {
+      "name": "spacing",
+      "path": "spacing/SKILL.md",
+      "source_file": "SKILL (7).md",
+      "source_sha256": "de4d6a46813a449f2e82d3f1b8a01f295a11094d786a68f649dd0af2734c25a1",
+      "companions_supplied": false
+    },
+    {
+      "name": "ux-audit",
+      "path": "ux-audit/SKILL.md",
+      "source_file": "SKILL (4).md",
+      "source_sha256": "e393196cfab45bd5998e351bd075f9e8a25c2caddd0d14e799dfe3fdfe0ddf5d",
+      "companions_supplied": false
+    },
+    {
+      "name": "brandos-new-source",
+      "path": "brandos-new-source/SKILL.md",
+      "source_file": "SKILL (3).md",
+      "source_sha256": "36d45cedb6ce157b9cb0db570c3502f5729eaa276d2fc876c7c4b49c5532520f",
+      "companions_supplied": false
+    },
+    {
+      "name": "anti-slop",
+      "path": "anti-slop/SKILL.md",
+      "source_file": "SKILL (6).md",
+      "source_sha256": "240839d6133b58eb961ec917e78c3a2431adfd9c63bf3b9869a3a284c2d17c62",
+      "companions_supplied": false
+    }
+  ]
+}

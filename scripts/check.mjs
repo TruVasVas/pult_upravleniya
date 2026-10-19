@@ -1,0 +1,10 @@
+import { readFile } from 'node:fs/promises';
+import { Script } from 'node:vm';
+import assert from 'node:assert/strict';
+const html = await readFile(new URL('../index.html', import.meta.url), 'utf8');
+const script = html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
+assert.ok(script, 'App script exists');
+new Script(script, { filename: 'index.html' });
+assert.ok(html.includes('lang="ru"'));
+assert.ok(html.includes('prefers-reduced-motion'));
+console.log('HTML app script parses successfully. For functional checks run the documented browser scenarios.');

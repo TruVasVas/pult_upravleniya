@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { validateInventorySnapshot } from './lib/inventory.mjs';
 import { readFile } from 'node:fs/promises';
 const page = new URL('./index.html', import.meta.url);
 const port = Number(process.env.PORT || 3000);
@@ -7,6 +8,17 @@ http.createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname;
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); return res.end(); }
   if (path === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(req.method === 'HEAD' ? '' : JSON.stringify({ status: 'ok', mode: 'demo' })); }
+  if (path === '/api/inventory') {
+    try {
+      const source = process.env.INVENTORY_SNAPSHOT_PATH || new URL('./fixtures/inventory-demo.json', import.meta.url);
+      const snapshot = validateInventorySnapshot(JSON.parse(await readFile(source, 'utf8')));
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' });
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(snapshot));
+    } catch {
+      res.writeHead(503, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify({error:'Снимок остатков недоступен или не прошёл проверку. Проверьте настройку источника на сервере.'}));
+    }
+  }
   if (path !== '/' && path !== '/index.html') { res.writeHead(404); return res.end('Not found'); }
   try {
     const html = await readFile(page);

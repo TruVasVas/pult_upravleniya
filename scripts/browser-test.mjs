@@ -20,12 +20,12 @@ try{
  const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR at',page.url(),e.stack)});
  await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});
  await page.goto(base);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
- const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','crm','stock','supplies','taxes','documents','integrations','tasks','pnl','dds','rnp','unit'];
+ const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','stock','supplies','taxes','documents','integrations','tasks','pnl','dds','rnp','unit'];
  for(const width of [1280,375]){
   await page.setViewportSize({width,height:900});
   for(const route of paths){
    await page.goto(base+'/#'+route);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
-   const expectedTitles={home:null,decisions:'Центр решений',analytics:'Аналитика',finance:'Финансы',sales:'Продажи',marketplaces:'Маркетплейсы',ads:'Реклама',crm:'CRM',stock:'Склад',supplies:'Поставки',taxes:'Налоги и платежи',documents:'Документы',integrations:'Интеграции',tasks:'Задачи',pnl:'ОПиУ',dds:'ДДС',rnp:'РНП',unit:'Юнит-экономика'};
+   const expectedTitles={home:null,decisions:'Центр решений',analytics:'Аналитика',finance:'Финансы',sales:'Продажи',marketplaces:'Маркетплейсы',ads:'Реклама',stock:'Склад',supplies:'Поставки',taxes:'Налоги и платежи',documents:'Документы',integrations:'Интеграции',tasks:'Задачи',pnl:'ОПиУ',dds:'ДДС',rnp:'РНП',unit:'Юнит-экономика'};
    if(route==='home')assert.ok(await page.locator('main h1').textContent());else assert.equal(await page.locator('main h1').textContent(),expectedTitles[route],`heading ${route}`);
    assert.deepEqual(errors,[],`No runtime errors on ${route}`);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,`no overflow: ${route} at ${width}`);
@@ -33,7 +33,7 @@ try{
    assert.deepEqual(audit.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)})),[],`a11y ${route} ${width}`);
    await page.screenshot({path:new URL(`../test-results/${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
   }
-  console.log(`PASS 18 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
+  console.log(`PASS 17 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
  }
  await page.setViewportSize({width:1280,height:1000});
  await page.goto(base+'/#tasks');
@@ -51,13 +51,7 @@ try{
  await page.reload();assert.equal(await page.getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true}).count(),1);
  await page.locator('.task-card').filter({has:page.getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true})}).dragTo(page.locator('[data-drop-kind="task"][data-drop-stage="0"]'));
  assert.equal(await page.locator('[data-drop-stage="0"]').getByRole('heading',{name:'Проверить новую коллекцию — обновлено',exact:true}).count(),1);
- await page.goto(base+'/#crm');await page.getByRole('button',{name:'Добавить сделку',exact:true}).click();
- await page.getByLabel('Название сделки',{exact:true}).fill('Тестовый мерч');await page.getByLabel('Компания / клиент',{exact:true}).fill('Команда теста');await page.getByLabel('Сумма, ₽',{exact:true}).fill('75000');
- await page.getByRole('button',{name:'Добавить сделку',exact:true}).last().click();
- await page.getByRole('button',{name:'Тестовый мерч',exact:true}).click();await page.getByLabel('Сумма, ₽',{exact:true}).fill('85000');await page.getByRole('button',{name:'Сохранить изменения',exact:true}).click();
- await page.locator('.task-card').filter({has:page.getByRole('heading',{name:'Тестовый мерч',exact:true})}).locator('select').selectOption('3');
- await page.reload();assert.equal(await page.locator('[data-drop-stage="3"]').getByRole('heading',{name:'Тестовый мерч',exact:true}).count(),1);
- console.log('PASS tasks/deals: required fields, create, edit, change status, reload persistence');
+ console.log('PASS tasks: required fields, create, edit, change status, reload persistence');
  await page.goto(base+'/#decisions');const first=page.locator('.decision-card').first();const title=await first.locator('h2').textContent();const steps=await first.locator('li').count();
  await first.getByRole('button',{name:'Принять',exact:true}).click();await page.getByRole('button',{name:/^В работе/}).click();assert.equal(await page.getByRole('heading',{name:title,exact:true}).count(),1);
  await page.goto(base+'/#tasks');let autoTasks=await page.locator('.task-card').count();assert.ok(autoTasks>=7+steps);
@@ -81,7 +75,7 @@ try{
  await page.locator('.assistant-trigger').click();await page.getByLabel('Сообщение ассистенту').fill('Что с деньгами?');await page.getByRole('button',{name:'Отправить сообщение'}).click();assert.ok((await page.locator('.chat-message').last().textContent()).includes('кассовый разрыв'));
  const focusBefore=await page.evaluate(()=>document.activeElement.outerHTML);await page.keyboard.press('Shift+Tab');assert.ok(await page.evaluate(()=>document.getElementById('drawer').contains(document.activeElement)));await page.keyboard.press('Escape');assert.equal(await page.locator('#drawer').getAttribute('inert'),'');
  console.log('PASS period selection, global search, assistant, drawer keyboard focus and Escape');
- await page.setViewportSize({width:375,height:812});await page.getByLabel('Открыть меню',{exact:true}).click();assert.equal(await page.getByLabel('Открыть меню',{exact:true}).getAttribute('aria-expanded'),'true');await page.locator('.nav [data-route="crm"]').click();assert.equal(await page.getByRole('heading',{name:'CRM',exact:true}).count(),1);assert.equal(await page.locator('#navScrim').isHidden(),true);
+ await page.setViewportSize({width:375,height:812});await page.getByLabel('Открыть меню',{exact:true}).click();assert.equal(await page.getByLabel('Открыть меню',{exact:true}).getAttribute('aria-expanded'),'true');await page.locator('.nav [data-route="stock"]').click();assert.equal(await page.getByRole('heading',{name:'Склад',exact:true}).count(),1);assert.equal(await page.locator('#navScrim').isHidden(),true);
  await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches),true);
  console.log('PASS mobile menu, route navigation, reduced-motion preference');
  assert.deepEqual(errors,[],'No runtime JS errors');

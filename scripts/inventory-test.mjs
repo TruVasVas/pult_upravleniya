@@ -1,0 +1,48 @@
+import assert from 'node:assert/strict';
+import {readFile,writeFile,mkdtemp,rm} from 'node:fs/promises';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {chromium} from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
+import {validateInventorySnapshot} from '../lib/inventory.mjs';
+const root=fileURLToPath(new URL('..',import.meta.url)),port=Number(process.env.INVENTORY_TEST_PORT||3400),base=`http://127.0.0.1:${port}`,fixture=JSON.parse(await readFile(new URL('../fixtures/inventory-demo.json',import.meta.url),'utf8'));
+const temporary=await mkdtemp(join(tmpdir(),'brandos-inventory-')),snapshotPath=join(temporary,'snapshot.json');
+let browser;const services=[];
+const start=(port,extra={})=>{const child=spawn(process.execPath,['server.mjs'],{cwd:root,env:{...process.env,PORT:String(port),HOST:'127.0.0.1',...extra},stdio:'ignore'});services.push(child);return child};
+const ready=async url=>{for(let i=0;i<60;i++){try{if((await fetch(url+'/health')).ok)return}catch{}await new Promise(r=>setTimeout(r,100))}throw new Error('Test server did not start')};
+try{
+ const valid=validateInventorySnapshot(fixture);assert.equal(valid.items.reduce((s,r)=>s+r.available,0),1522);assert.ok(valid.warehouses.every(w=>w.externalId===null));
+ assert.throws(()=>validateInventorySnapshot({...fixture,mode:'live'}));
+ assert.throws(()=>validateInventorySnapshot({...fixture,items:[{...fixture.items[0],available:-1}]}));
+ assert.throws(()=>validateInventorySnapshot({...fixture,items:[{...fixture.items[0],warehouseKey:'missing'}]}));
+ assert.throws(()=>validateInventorySnapshot({...fixture,items:[fixture.items[0],fixture.items[0]]}));
+ const live={version:1,mode:'live',updatedAt:'2026-10-20T12:00:00Z',warehouses:[{key:'source-wb-test',marketplace:'wb',externalId:'test-source-id',name:'Название из источника',fulfillment:'FBW'}],items:[{warehouseKey:'source-wb-test',marketplace:'wb',article:'API-001',name:'Товар из источника',available:9,reserved:2,toCustomer:1,returnsInTransit:0}],internalNote:'Must not leave the server'};
+ assert.equal(validateInventorySnapshot(live).internalNote,undefined);
+ await writeFile(snapshotPath,JSON.stringify(live));start(port);start(port+1,{INVENTORY_SNAPSHOT_PATH:snapshotPath});await Promise.all([ready(base),ready(`http://127.0.0.1:${port+1}`)]);
+ const response=await fetch(base+'/api/inventory');assert.equal(response.status,200);assert.deepEqual(await response.json(),valid);
+ const liveApi=await fetch(`http://127.0.0.1:${port+1}/api/inventory`);assert.equal(liveApi.status,200);assert.deepEqual(await liveApi.json(),validateInventorySnapshot(live));
+ await writeFile(snapshotPath,JSON.stringify({...live,items:[{...live.items[0],reserved:-3}]}));assert.equal((await fetch(`http://127.0.0.1:${port+1}/api/inventory`)).status,503);
+ console.log('PASS inventory API: demo/live snapshots, source IDs, schema validation, safe public fields, invalid data rejected');
+ browser=await chromium.launch({...process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{},args:['--no-sandbox']});
+ const context=await browser.newContext({viewport:{width:1280,height:1000}}),page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(base+'/#analytics');assert.equal(await page.getByRole('button',{name:/Рекламные кампании|Внешний трафик/}).count(),0);assert.equal(await page.locator('[data-analytics-tab]').count(),0);assert.equal(await page.locator('.nav [data-route="crm"]').count(),0);
+ await page.goto(base+'/#ads');await page.getByRole('button',{name:'Внешний трафик',exact:true}).click();assert.equal(await page.getByRole('cell',{name:'Яндекс Директ',exact:true}).count(),1);const visits=await page.evaluate(()=>selectedTraffic().reduce((s,r)=>s+r.visits,0));await page.locator('#periodSelect').selectOption('today');assert.ok(await page.evaluate(()=>selectedTraffic().reduce((s,r)=>s+r.visits,0))<visits);
+ const download=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать отчёт',exact:true}).click();assert.ok((await download).suggestedFilename().includes('traffic'));
+ await page.goto(base+'/#crm');assert.ok((await page.locator('h1').textContent()).includes('Александр'));assert.equal(await page.getByRole('button',{name:'Добавить сделку',exact:true}).count(),0);await page.getByRole('button',{name:'Аналитика трафика',exact:false}).click();assert.equal(await page.locator('[data-ads-tab="traffic"]').getAttribute('aria-pressed'),'true');
+ console.log('PASS products-only analytics, external traffic moved to advertising, date-aware traffic and export, removed CRM routes/actions');
+ await page.goto(base+'/#stock');assert.equal(await page.locator('.warehouse-card').count(),6);assert.equal(await page.evaluate(()=>inventoryRows().reduce((s,r)=>s+r.available,0)),1522);
+ await page.getByRole('button',{name:'Wildberries',exact:true}).click();assert.equal(await page.evaluate(()=>inventoryRows().reduce((s,r)=>s+r.available,0)),1124);assert.equal(await page.locator('.warehouse-card').count(),3);
+ await page.locator('#warehouseFilter').selectOption('demo-wb-koledino');assert.equal(await page.evaluate(()=>inventoryRows().reduce((s,r)=>s+r.available,0)),560);await page.locator('#warehouseFilter').selectOption('all');
+ await page.getByLabel('Название товара или артикул',{exact:true}).fill('HD-001');await page.getByRole('button',{name:'Найти',exact:true}).click();assert.equal(await page.evaluate(()=>inventoryRows().length),2);
+ const csvDownload=page.waitForEvent('download');await page.getByRole('button',{name:'Экспорт остатков',exact:true}).click();const csv=await readFile(await (await csvDownload).path(),'utf8');assert.ok(csv.includes('Коледино'));assert.ok(csv.includes('Электросталь'));assert.ok(!csv.includes('Софьино'));
+ await page.getByRole('button',{name:'Сбросить поиск',exact:true}).click();await page.getByRole('button',{name:'Ozon',exact:true}).click();assert.equal(await page.evaluate(()=>inventoryRows().reduce((s,r)=>s+r.available,0)),398);
+ await page.getByRole('button',{name:'Обновить остатки',exact:true}).click();await page.waitForFunction(()=>!inventoryLoading);assert.equal(await page.evaluate(()=>inventorySnapshot.mode),'demo');
+ console.log('PASS per-warehouse counts, WB/Ozon tabs, warehouse/product filters, filtered stock CSV, refresh from API');
+ await page.getByRole('button',{name:'Все склады',exact:true}).click();
+ await page.route('**/api/inventory',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(live)}));await page.getByRole('button',{name:'Обновить остатки',exact:true}).click();await page.waitForFunction(()=>!inventoryLoading);assert.equal(await page.evaluate(()=>inventoryRows()[0].available),9);assert.equal(await page.getByRole('heading',{name:'Название из источника',exact:true}).count(),1);assert.ok((await page.locator('.warehouse-id').textContent()).includes('test-source-id'));
+ await page.unroute('**/api/inventory');await page.route('**/api/inventory',route=>route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({...live,items:[{...live.items[0],available:-9}]})}));await page.getByRole('button',{name:'Обновить остатки',exact:true}).click();await page.waitForFunction(()=>!inventoryLoading);assert.equal(await page.evaluate(()=>inventoryRows()[0].available),9);assert.ok((await page.locator('#toast').textContent()).includes('Не удалось получить остатки'));
+ for(const width of [1280,375]){await page.setViewportSize({width,height:900});await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual((await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze()).violations,[])}
+ assert.deepEqual(errors,[]);console.log('PASS dynamic source warehouse catalog, source IDs, last good snapshot on errors, accessibility and responsive layout');
+}finally{await browser?.close();for(const child of services)child.kill('SIGTERM');await rm(temporary,{recursive:true,force:true})}

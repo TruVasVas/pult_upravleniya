@@ -17,21 +17,23 @@ try{
  browser=await chromium.launch({...process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{},args:['--no-sandbox']});
  const context=await browser.newContext({viewport:{width:1280,height:1000}});
  const page=await context.newPage();
- const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.log('PAGE ERROR at',page.url(),e.stack)});
  await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});
  await page.goto(base);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
- const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','crm','stock','supplies','taxes','documents','integrations','tasks'];
+ const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','crm','stock','supplies','taxes','documents','integrations','tasks','pnl','dds','rnp','unit'];
  for(const width of [1280,375]){
   await page.setViewportSize({width,height:900});
   for(const route of paths){
    await page.goto(base+'/#'+route);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
-   assert.ok(await page.locator('main h1').textContent(),`heading ${route}`);
+   const expectedTitles={home:null,decisions:'Центр решений',analytics:'Аналитика',finance:'Финансы',sales:'Продажи',marketplaces:'Маркетплейсы',ads:'Реклама',crm:'CRM',stock:'Склад',supplies:'Поставки',taxes:'Налоги и платежи',documents:'Документы',integrations:'Интеграции',tasks:'Задачи',pnl:'ОПиУ',dds:'ДДС',rnp:'РНП',unit:'Юнит-экономика'};
+   if(route==='home')assert.ok(await page.locator('main h1').textContent());else assert.equal(await page.locator('main h1').textContent(),expectedTitles[route],`heading ${route}`);
+   assert.deepEqual(errors,[],`No runtime errors on ${route}`);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,`no overflow: ${route} at ${width}`);
    const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
    assert.deepEqual(audit.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)})),[],`a11y ${route} ${width}`);
    await page.screenshot({path:new URL(`../test-results/${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
   }
-  console.log(`PASS 14 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
+  console.log(`PASS 18 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
  }
  await page.setViewportSize({width:1280,height:1000});
  await page.goto(base+'/#tasks');

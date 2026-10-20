@@ -8,7 +8,8 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "check": "node scripts/check.mjs",
-    "test": "node scripts/browser-test.mjs"
+    "test": "node scripts/browser-test.mjs && node scripts/reports-test.mjs",
+    "test:reports": "node scripts/reports-test.mjs"
   },
   "engines": {
     "node": ">=20"

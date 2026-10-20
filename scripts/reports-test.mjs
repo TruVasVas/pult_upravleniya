@@ -19,14 +19,14 @@ try{
  await page.reload();assert.equal(await page.locator('#periodSelect').inputValue(),'custom');assert.equal(await page.evaluate(()=>totals().revenue),custom);
  await page.goto(base+'/#pnl');assert.equal(await page.evaluate(()=>reportPnl().revenue),custom);const pnl=await page.evaluate(()=>reportPnl());assert.ok(Math.abs(pnl.profit-(pnl.revenue-pnl.commission-pnl.logistics-pnl.cost-pnl.advertising-pnl.fixed))<.001);
  await page.goto(base+'/#rnp');assert.equal(await page.evaluate(()=>dailyPerformance().reduce((s,r)=>s+r.revenue,0)),custom);assert.ok(Math.abs(await page.evaluate(()=>dailyPerformance().reduce((s,r)=>s+r.profit,0))-pnl.profit)<.001);
- let dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать РНП XLSX'}).click();const rnpXlsx=await readFile(await (await dl).path());assert.equal(rnpXlsx.readUInt32LE(0),0x04034b50);
+ let dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать Excel'}).click();const rnpXlsx=await readFile(await (await dl).path());assert.equal(rnpXlsx.readUInt32LE(0),0x04034b50);
  console.log('PASS calendar presets, invalid dates, inclusive custom range, persistence, matching overview / P&L / daily totals, RNP XLSX');
  await page.goto(base+'/#dds');await page.locator('#periodSelect').selectOption('month');let d=await page.evaluate(()=>ddsMetrics());assert.equal(d.income,643400);assert.equal(d.expense,238400);assert.equal(d.net,405000);assert.equal(d.closing,1632200);assert.equal(d.closing,d.opening+d.income-d.expense);
  await page.locator('#periodSelect').selectOption('yesterday');d=await page.evaluate(()=>ddsMetrics());assert.equal(d.income,214800);assert.equal(d.expense,28400);assert.equal(d.tx.length,2);
  dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать ДДС'}).click();const ddsCsv=await readFile(await (await dl).path(),'utf8');assert.ok(ddsCsv.includes('"-28400"'));assert.ok(!ddsCsv.includes("'-28400"));
  console.log('PASS cash flow: selected transactions, opening + income - expense = closing, numeric negative CSV values');
- await page.goto(base+'/#unit');assert.equal(await page.locator('.seller-table th').count(),19);assert.equal(await page.evaluate(()=>unitRows()[0].name),'Товар 1');
- console.log('PASS workbook unit-economics route; formulas and editing covered by seller-moon-test');
+ await page.goto(base+'/#unit');assert.equal(await page.locator('.economics-table th').count(),5);assert.equal(await page.evaluate(()=>economicsRows().length),0);
+ console.log('PASS empty API-driven unit-economics route; source behavior covered by economics-test');
  await page.goto(base+'/#taxes');await page.getByRole('button',{name:'Сформировать декларацию',exact:true}).click();assert.equal(await page.locator('#f-inn').getAttribute('aria-invalid'),'true');
  await page.getByRole('button',{name:'Заполнить демо-пример',exact:true}).click();await page.getByRole('button',{name:'Сформировать декларацию',exact:true}).click();assert.ok((await page.locator('.declaration-preview').textContent()).includes('К доплате: 600'));assert.ok((await page.locator('.declaration-preview').textContent()).includes('НЕ ДЛЯ ПОДАЧИ'));
  dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать черновик TXT',exact:true}).click();const declaration=await dl;assert.ok(declaration.suggestedFilename().endsWith('.txt'));assert.ok((await readFile(await declaration.path(),'utf8')).includes('7701234560'));

@@ -1,0 +1,1284 @@
+[
+  {
+    "id": "unit",
+    "name": "Юнит-экономика",
+    "columns": [
+      {
+        "key": "name",
+        "label": "Название товара",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "purchase",
+        "label": "Закупка, руб",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "price",
+        "label": "Цена без СПП, руб",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "buyout",
+        "label": "% Выкупа",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "adRate",
+        "label": "Реклама %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "advertising",
+        "label": "Реклама, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "delivery",
+        "label": "Доставка ВБ, руб",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "deliveryAdjusted",
+        "label": "Доставка с % выкупа",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "reverseLogistics",
+        "label": "Обратная логистика",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "taxRate",
+        "label": "Налог %",
+        "format": "percent",
+        "source": "customer"
+      },
+      {
+        "key": "tax",
+        "label": "Налог, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "commissionRate",
+        "label": "Комиссия ВБ %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "commission",
+        "label": "Комиссия ВБ, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "fulfillment",
+        "label": "ФФ, руб",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "lossRate",
+        "label": "Брак и потери %",
+        "format": "percent",
+        "source": "customer"
+      },
+      {
+        "key": "loss",
+        "label": "Брак и потери, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "profit",
+        "label": "Прибыль с 1 единицы, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "margin",
+        "label": "Маржа %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "roi",
+        "label": "ROI %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "price",
+          "profit",
+          "margin",
+          "roi"
+        ]
+      },
+      {
+        "id": "costs",
+        "name": "Затраты",
+        "keys": [
+          "name",
+          "purchase",
+          "delivery",
+          "fulfillment",
+          "deliveryAdjusted",
+          "reverseLogistics"
+        ]
+      },
+      {
+        "id": "ads",
+        "name": "Реклама и комиссии",
+        "keys": [
+          "name",
+          "adRate",
+          "advertising",
+          "commissionRate",
+          "commission"
+        ]
+      },
+      {
+        "id": "tax",
+        "name": "Налог и потери",
+        "keys": [
+          "name",
+          "taxRate",
+          "tax",
+          "lossRate",
+          "loss",
+          "buyout"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "products",
+    "name": "Товары",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Наименование товара",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "purchase",
+        "label": "Закупка",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "intermediaryRate",
+        "label": "Посредник,  в %",
+        "format": "percent",
+        "source": "customer"
+      },
+      {
+        "key": "ownDefectRate",
+        "label": "Брак, в %",
+        "format": "percent",
+        "source": "customer"
+      },
+      {
+        "key": "inboundDelivery",
+        "label": "Доставка",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "marking",
+        "label": "Маркировка",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "ownStorage",
+        "label": "Хранение",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "packaging",
+        "label": "Упаковка",
+        "format": "number",
+        "source": "customer"
+      },
+      {
+        "key": "cost",
+        "label": "Себест итого",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "quantity",
+        "label": "кол-во",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "stockCost",
+        "label": "сумма себестоимости",
+        "format": "number",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "article",
+          "purchase",
+          "cost",
+          "quantity"
+        ]
+      },
+      {
+        "id": "costs",
+        "name": "Себестоимость",
+        "keys": [
+          "name",
+          "purchase",
+          "intermediaryRate",
+          "ownDefectRate",
+          "inboundDelivery"
+        ]
+      },
+      {
+        "id": "prepare",
+        "name": "Подготовка товара",
+        "keys": [
+          "name",
+          "marking",
+          "ownStorage",
+          "packaging",
+          "cost"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог и остатки",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode",
+          "quantity",
+          "stockCost"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wb-fbw",
+    "name": "WB FBW",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Товар",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "cost",
+        "label": "Себестоимость до передачи на маркетплейс",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "priceBefore",
+        "label": "Цена продажи до скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "discountRate",
+        "label": "Скидка, в %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "price",
+        "label": "Цена продажи после скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "sppRate",
+        "label": "СПП,  в %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "commissionRate",
+        "label": "Комиссия, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "logisticsBase",
+        "label": "Логистика, руб / Базовая ставка",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "buyout",
+        "label": "Логистика, руб / Выкуп, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "logistics",
+        "label": "Логистика, руб / Итого, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "storageDaily",
+        "label": "Хранение, руб / Цена за сутки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "storageDays",
+        "label": "Хранение, руб / Среднее кол-во дней",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "storage",
+        "label": "Хранение, руб / Итого, руб",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "acceptance",
+        "label": "Платная приемка, руб",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "adRate",
+        "label": "Расходы на продвижение, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "revenue",
+        "label": "Выручка",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "tax",
+        "label": "УСН (6%+1%)",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "profit",
+        "label": "Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "margin",
+        "label": "Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "roi",
+        "label": "Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "costShare",
+        "label": "Доля себестоимости в цене товара %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "price",
+          "profit",
+          "margin",
+          "roi"
+        ]
+      },
+      {
+        "id": "prices",
+        "name": "Цены",
+        "keys": [
+          "name",
+          "priceBefore",
+          "discountRate",
+          "price",
+          "sppRate"
+        ]
+      },
+      {
+        "id": "logistics",
+        "name": "Логистика",
+        "keys": [
+          "name",
+          "logisticsBase",
+          "buyout",
+          "logistics"
+        ]
+      },
+      {
+        "id": "fees0",
+        "name": "Расходы · 1",
+        "keys": [
+          "name",
+          "commissionRate",
+          "adRate",
+          "storageDaily",
+          "storageDays",
+          "storage"
+        ]
+      },
+      {
+        "id": "fees5",
+        "name": "Расходы · 2",
+        "keys": [
+          "name",
+          "acceptance"
+        ]
+      },
+      {
+        "id": "finance",
+        "name": "Финансы",
+        "keys": [
+          "name",
+          "cost",
+          "revenue",
+          "tax",
+          "costShare"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wb-fbs",
+    "name": "WB FBS",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Товар",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "cost",
+        "label": "Себестоимость до передачи на маркетплейс",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "priceBefore",
+        "label": "Цена продажи до скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "discountRate",
+        "label": "% скидки",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "price",
+        "label": "Цена после скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "sppRate",
+        "label": "СПП, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "commissionRate",
+        "label": "Комиссия, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "logisticsBase",
+        "label": "Логистика, руб / Базовая ставка",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "buyout",
+        "label": "Логистика, руб / Выкуп, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "logistics",
+        "label": "Логистика, руб / Итого, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "acceptance",
+        "label": "Платная приемка, руб",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "adRate",
+        "label": "Расходы на продвижение, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "revenue",
+        "label": "Выручка",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "tax",
+        "label": "УСН (6%+1%)",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "profit",
+        "label": "Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "margin",
+        "label": "Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "roi",
+        "label": "Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "costShare",
+        "label": "Доля себестоимости в цене товара %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "price",
+          "profit",
+          "margin",
+          "roi"
+        ]
+      },
+      {
+        "id": "prices",
+        "name": "Цены",
+        "keys": [
+          "name",
+          "priceBefore",
+          "discountRate",
+          "price",
+          "sppRate"
+        ]
+      },
+      {
+        "id": "logistics",
+        "name": "Логистика",
+        "keys": [
+          "name",
+          "logisticsBase",
+          "buyout",
+          "logistics"
+        ]
+      },
+      {
+        "id": "fees",
+        "name": "Расходы",
+        "keys": [
+          "name",
+          "commissionRate",
+          "adRate",
+          "acceptance"
+        ]
+      },
+      {
+        "id": "finance",
+        "name": "Финансы",
+        "keys": [
+          "name",
+          "cost",
+          "revenue",
+          "tax",
+          "costShare"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ozon-fbo",
+    "name": "Ozon FBO",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Товар",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "cost",
+        "label": "Себестоимость до передачи на маркетплейс",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "priceBefore",
+        "label": "Цена продажи до скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "discountRate",
+        "label": "% скидки",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "price",
+        "label": "Цена после скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "commissionRate",
+        "label": "Комиссия, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "logisticsBase",
+        "label": "Логистика, руб / Базовая ставка = Логистика",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "buyout",
+        "label": "Логистика, руб / Выкуп, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "logistics",
+        "label": "Логистика, руб / Итого, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "lastMile",
+        "label": "Логистика, руб / Последняя миля",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "acquiringRate",
+        "label": "Эквайринг, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "adRate",
+        "label": "Расходы на продвижение, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "revenue",
+        "label": "Выручка",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "tax",
+        "label": "УСН (6%+1%)",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "profit",
+        "label": "Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "margin",
+        "label": "Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "roi",
+        "label": "Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "costShare",
+        "label": "Доля себестоимости в цене товара %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "price",
+          "profit",
+          "margin",
+          "roi"
+        ]
+      },
+      {
+        "id": "prices",
+        "name": "Цены",
+        "keys": [
+          "name",
+          "priceBefore",
+          "discountRate",
+          "price"
+        ]
+      },
+      {
+        "id": "logistics",
+        "name": "Логистика",
+        "keys": [
+          "name",
+          "logisticsBase",
+          "buyout",
+          "logistics",
+          "lastMile"
+        ]
+      },
+      {
+        "id": "fees",
+        "name": "Расходы",
+        "keys": [
+          "name",
+          "commissionRate",
+          "adRate",
+          "acquiringRate"
+        ]
+      },
+      {
+        "id": "finance",
+        "name": "Финансы",
+        "keys": [
+          "name",
+          "cost",
+          "revenue",
+          "tax",
+          "costShare"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "ozon-fbs",
+    "name": "Ozon FBS",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Товар",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "cost",
+        "label": "Себестоимость до передачи на маркетплейс",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "priceBefore",
+        "label": "Цена продажи до скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "discountRate",
+        "label": "% скидки",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "price",
+        "label": "Цена после скидки",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "commissionRate",
+        "label": "Комиссия, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "logisticsBase",
+        "label": "Логистика, руб / Базовая ставка = Логистика",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "buyout",
+        "label": "Логистика, руб / Выкуп, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "logistics",
+        "label": "Логистика, руб / Итого, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "lastMile",
+        "label": "Логистика, руб / Последняя миля",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "processing",
+        "label": "Логистика, руб / Обрабока отправления",
+        "format": "number",
+        "source": "api"
+      },
+      {
+        "key": "acquiringRate",
+        "label": "Эквайринг, %",
+        "format": "percent",
+        "source": "api"
+      },
+      {
+        "key": "adRate",
+        "label": "Расходы на продвижение, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "revenue",
+        "label": "Выручка",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "tax",
+        "label": "УСН (6%+1%)",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "profit",
+        "label": "Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "margin",
+        "label": "Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "roi",
+        "label": "Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "costShare",
+        "label": "Доля себестоимости в цене товара %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Основное",
+        "keys": [
+          "name",
+          "price",
+          "profit",
+          "margin",
+          "roi"
+        ]
+      },
+      {
+        "id": "prices",
+        "name": "Цены",
+        "keys": [
+          "name",
+          "priceBefore",
+          "discountRate",
+          "price"
+        ]
+      },
+      {
+        "id": "logistics",
+        "name": "Логистика",
+        "keys": [
+          "name",
+          "logisticsBase",
+          "buyout",
+          "logistics",
+          "lastMile",
+          "processing"
+        ]
+      },
+      {
+        "id": "fees",
+        "name": "Расходы",
+        "keys": [
+          "name",
+          "commissionRate",
+          "adRate",
+          "acquiringRate"
+        ]
+      },
+      {
+        "id": "finance",
+        "name": "Финансы",
+        "keys": [
+          "name",
+          "cost",
+          "revenue",
+          "tax",
+          "costShare"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "compare",
+    "name": "Сравнить",
+    "columns": [
+      {
+        "key": "group",
+        "label": "Группа товаров",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "name",
+        "label": "Товар",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "article",
+        "label": "Артикул",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "barcode",
+        "label": "Штрих-код",
+        "format": "text",
+        "source": "api"
+      },
+      {
+        "key": "cost",
+        "label": "Себестоимость до передачи на маркетплейс",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbwProfit",
+        "label": "WB FBW · Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbwMargin",
+        "label": "WB FBW · Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbwRoi",
+        "label": "WB FBW · Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbsProfit",
+        "label": "WB FBS · Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbsMargin",
+        "label": "WB FBS · Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "wbFbsRoi",
+        "label": "WB FBS · Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFboProfit",
+        "label": "Ozon FBO · Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFboMargin",
+        "label": "Ozon FBO · Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFboRoi",
+        "label": "Ozon FBO · Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFbsProfit",
+        "label": "Ozon FBS · Прибыль, руб",
+        "format": "number",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFbsMargin",
+        "label": "Ozon FBS · Маржинальность, %",
+        "format": "percent",
+        "source": "calculated"
+      },
+      {
+        "key": "ozonFbsRoi",
+        "label": "Ozon FBS · Рентабельность (ROI), %",
+        "format": "percent",
+        "source": "calculated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "main",
+        "name": "Прибыль",
+        "keys": [
+          "name",
+          "wbFbwProfit",
+          "wbFbsProfit",
+          "ozonFboProfit",
+          "ozonFbsProfit"
+        ]
+      },
+      {
+        "id": "margin",
+        "name": "Маржинальность",
+        "keys": [
+          "name",
+          "wbFbwMargin",
+          "wbFbsMargin",
+          "ozonFboMargin",
+          "ozonFbsMargin"
+        ]
+      },
+      {
+        "id": "roi",
+        "name": "Рентабельность",
+        "keys": [
+          "name",
+          "wbFbwRoi",
+          "wbFbsRoi",
+          "ozonFboRoi",
+          "ozonFbsRoi"
+        ]
+      },
+      {
+        "id": "catalog",
+        "name": "Каталог",
+        "keys": [
+          "name",
+          "group",
+          "article",
+          "barcode",
+          "cost"
+        ]
+      }
+    ]
+  }
+]

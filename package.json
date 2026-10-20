@@ -8,11 +8,11 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "check": "node scripts/check.mjs",
-    "test": "npm run test:rnp && node scripts/browser-test.mjs && node scripts/reports-test.mjs && node scripts/seller-moon-test.mjs && node scripts/inventory-test.mjs",
+    "test": "npm run test:rnp && node scripts/browser-test.mjs && node scripts/reports-test.mjs && node scripts/economics-test.mjs && node scripts/inventory-test.mjs",
     "test:reports": "node scripts/reports-test.mjs",
-    "test:unit": "node scripts/seller-moon-test.mjs",
+    "test:unit": "node scripts/economics-test.mjs",
     "test:inventory": "node scripts/inventory-test.mjs",
-    "test:rnp": "node scripts/rnp-reconciliation-test.mjs && node scripts/rnp-workbook-test.mjs",
+    "test:rnp": "node scripts/rnp-reconciliation-test.mjs && node scripts/rnp-store-test.mjs",
     "rnp:import": "node scripts/rnp-import.mjs"
   },
   "engines": {

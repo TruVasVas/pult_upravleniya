@@ -21,7 +21,7 @@ try{
  await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});
  await page.goto(base);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
  const paths=['home','decisions','analytics','finance','sales','marketplaces','ads','stock','supplies','taxes','documents','integrations','tasks','pnl','dds','rnp','unit'];
- for(const width of [1280,375]){
+ for(const width of [1280,768,375]){
   await page.setViewportSize({width,height:900});
   for(const route of paths){
    await page.goto(base+'/#'+route);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
@@ -31,7 +31,7 @@ try{
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,`no overflow: ${route} at ${width}`);
    const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();
    assert.deepEqual(audit.violations.map(v=>({id:v.id,impact:v.impact,nodes:v.nodes.map(n=>n.target)})),[],`a11y ${route} ${width}`);
-   await page.screenshot({path:new URL(`../test-results/${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
+   await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:new URL(`../test-results/${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
   }
   console.log(`PASS 17 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
  }

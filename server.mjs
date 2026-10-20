@@ -1,4 +1,5 @@
 import http from 'node:http';
+import { economicsSnapshot } from './lib/economics.mjs';
 import { rnpSnapshot } from './lib/rnp-store.mjs';
 import { validateInventorySnapshot } from './lib/inventory.mjs';
 import { readFile } from 'node:fs/promises';
@@ -9,6 +10,17 @@ http.createServer(async (req, res) => {
   const path = new URL(req.url, 'http://localhost').pathname;
   if (req.method !== 'GET' && req.method !== 'HEAD') { res.writeHead(405, { Allow: 'GET, HEAD' }); return res.end(); }
   if (path === '/health') { res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(req.method === 'HEAD' ? '' : JSON.stringify({ status: 'ok', mode: 'demo' })); }
+  if (path === '/api/economics') {
+    try {
+      const query=new URL(req.url,'http://localhost').searchParams;
+      const snapshot=await economicsSnapshot(process.env.ECONOMICS_SNAPSHOT_PATH,{from:query.get('from'),to:query.get('to')});
+      res.writeHead(200, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'});
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify(snapshot));
+    } catch {
+      res.writeHead(503, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});
+      return res.end(req.method === 'HEAD' ? undefined : JSON.stringify({error:'Источник юнит-экономики недоступен или не прошёл проверку.'}));
+    }
+  }
   if (path === '/api/rnp') {
     try {
       const snapshot=await rnpSnapshot(process.env.RNP_LEDGER_PATH);

@@ -25,7 +25,7 @@ try{
  await page.locator('#periodSelect').selectOption('yesterday');d=await page.evaluate(()=>ddsMetrics());assert.equal(d.income,214800);assert.equal(d.expense,28400);assert.equal(d.tx.length,2);
  dl=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать ДДС'}).click();const ddsCsv=await readFile(await (await dl).path(),'utf8');assert.ok(ddsCsv.includes('"-28400"'));assert.ok(!ddsCsv.includes("'-28400"));
  console.log('PASS cash flow: selected transactions, opening + income - expense = closing, numeric negative CSV values');
- await page.goto(base+'/#unit');assert.equal(await page.locator('.economics-table th').count(),5);assert.equal(await page.evaluate(()=>economicsRows().length),0);
+ await page.goto(base+'/#unit');assert.equal(await page.locator('.economics-table th').count(),19);assert.equal(await page.evaluate(()=>economicsRows().length),0);
  console.log('PASS empty API-driven unit-economics route; source behavior covered by economics-test');
  await page.goto(base+'/#taxes');await page.getByRole('button',{name:'Сформировать декларацию',exact:true}).click();assert.equal(await page.locator('#f-inn').getAttribute('aria-invalid'),'true');
  await page.getByRole('button',{name:'Заполнить демо-пример',exact:true}).click();await page.getByRole('button',{name:'Сформировать декларацию',exact:true}).click();assert.ok((await page.locator('.declaration-preview').textContent()).includes('К доплате: 600'));assert.ok((await page.locator('.declaration-preview').textContent()).includes('НЕ ДЛЯ ПОДАЧИ'));

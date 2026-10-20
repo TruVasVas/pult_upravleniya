@@ -37,7 +37,7 @@ try{
  assert.equal(await page.evaluate(()=>economicsValue(economicsRows()[0],economicsSchema().columns.find(c=>c.key==='purchase')).value),350);assert.equal(await page.evaluate(()=>economicsValue(economicsRows()[1],economicsSchema().columns.find(c=>c.key==='purchase')).value),null,'different marketplaces never share manual costs');
  // Legacy scenario is seeded once; the new data must survive navigation/reload.
  await page.reload();await page.waitForFunction(()=>!economicsLoading);assert.equal(await page.evaluate(()=>economicsValue(economicsRows()[0],economicsSchema().columns.find(c=>c.key==='purchase')).value),350);
- await page.locator('#economicsColumns').selectOption('ads');const commissionCol=await page.evaluate(()=>economicsSchema().columns.find(c=>c.key==='commission'));assert.equal(await page.evaluate(c=>economicsValue(economicsRows()[0],c).value,commissionCol),0,'explicit zero is retained');
+ const commissionCol=await page.evaluate(()=>economicsSchema().columns.find(c=>c.key==='commission'));assert.equal(await page.evaluate(c=>economicsValue(economicsRows()[0],c).value,commissionCol),0,'explicit zero is retained');
  await page.getByRole('button',{name:/Нужны данные/}).click();let download=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать список для заказчика'}).click();const text=await readFile(await (await download).path(),'utf8');assert.ok(text.includes('Налог %'));assert.ok(text.includes('Комиссия ВБ %'));assert.ok(!text.includes('Цена без СПП'));
  await page.getByRole('button',{name:'Закрыть панель',exact:true}).click();source.rows[0].values.purchase=value(420);await writeFile(path,JSON.stringify(source));await page.getByRole('button',{name:'Обновить',exact:true}).click();await page.waitForFunction(()=>!economicsLoading);assert.equal(await page.evaluate(()=>economicsValue(economicsRows()[0],economicsSchema().columns.find(c=>c.key==='purchase')).value),420,'API takes precedence over archived manual value');
  download=page.waitForEvent('download');await page.getByRole('button',{name:'Скачать Excel',exact:true}).click();const exported=await download;
@@ -52,8 +52,20 @@ s=E.fromstring(z.read('xl/worksheets/sheet1.xml'));assert len(s.find('s:sheetDat
  await mkdir(new URL('../test-results/',import.meta.url),{recursive:true});
  for(const route of ['unit','rnp'])for(const width of [1280,768,375]){
   await page.setViewportSize({width,height:900});await page.goto(base+'/#'+route);await page.waitForFunction(()=>!economicsLoading);await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
-  for(const group of await page.locator('#economicsColumns option').evaluateAll(es=>es.map(e=>e.value))){await page.locator('#economicsColumns').selectOption(group);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,route+' '+width+' '+group+' page width');assert.equal(await page.locator('.economics-table').evaluate(t=>t.scrollWidth<=t.parentElement.clientWidth),true,route+' '+width+' '+group+' table width');assert.ok(await page.locator('.economics-table th').count()<=6)}
-  await page.locator('#economicsColumns').selectOption('main');await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[],route+' '+width+' accessibility');await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:new URL(`../test-results/economics-${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
+  assert.equal(await page.locator('#economicsColumns').count(),0,'all columns are in one table');
+  assert.equal(await page.locator('.economics-table th').count(),route==='unit'?19:24);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,route+' '+width+' page width');
+  const scroller=page.locator('#economicsScroll'),first=page.locator('.economics-table tbody tr').first().locator('td').first(),before=await first.boundingBox();
+  assert.ok(await scroller.evaluate(e=>e.scrollWidth>e.clientWidth),'table has inner horizontal scrolling');
+  await page.locator('#economicsScrollRange').fill('1000');
+  assert.ok(await scroller.evaluate(e=>e.scrollLeft>1000));
+  const after=await first.boundingBox();assert.ok(Math.abs(after.x-before.x)<1,'product column stays fixed at the left edge');
+  assert.equal(await page.locator('.economics-table th').last().isVisible(),true,'columns remain visible on mobile');
+  assert.ok(await first.textContent().then(t=>t.includes('A-')),'sticky cell includes article');
+  await scroller.evaluate(e=>e.scrollLeft=300);await page.waitForFunction(()=>+document.getElementById('economicsScrollRange').value<1000);
+  const previous=await scroller.evaluate(e=>e.scrollLeft);await scroller.dispatchEvent('wheel',{deltaY:120,shiftKey:true,bubbles:true,cancelable:true});assert.ok(await scroller.evaluate(e=>e.scrollLeft)>previous,'Shift + mouse wheel scrolls horizontally');
+  await page.locator('#economicsScrollRange').fill('0');await page.evaluate(async()=>{await document.fonts.ready;await Promise.all(document.getAnimations().map(a=>a.finished.catch(()=>{})))});
+  const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>n.target)})),[],route+' '+width+' accessibility');await page.evaluate(()=>{document.activeElement?.blur();window.scrollTo({top:0,behavior:'instant'})});await page.screenshot({path:new URL(`../test-results/economics-${route}-${width}.png`,import.meta.url).pathname,fullPage:true});
  }
  assert.deepEqual(errors,[]);console.log('PASS economics: headers only, legacy sample isolation, validated provenance, API priority, customer requests, manual persistence, period isolation, pagination, source errors, XLSX without guessed values/formulas, shared tables and WCAG at 1280/768/375');
 }finally{await browser?.close();server.kill('SIGTERM');await rm(directory,{recursive:true,force:true})}

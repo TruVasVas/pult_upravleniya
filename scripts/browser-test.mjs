@@ -35,6 +35,18 @@ try{
   }
   console.log(`PASS 17 routes: render, overflow, WCAG automated checks, screenshots at ${width}px`);
  }
+ await page.setViewportSize({width:1280,height:720});
+ await page.goto(base+'/#home');
+ await page.locator('#sidebar a[data-route="taxes"]').click();
+ const position=await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop);assert.ok(position>0);
+ await page.waitForFunction(value=>Number(sessionStorage.getItem('brandos-sidebar-scroll-v1'))===value,position);
+ const activeBefore=await page.locator('#sidebar [aria-current="page"]').boundingBox();
+ await page.reload();await page.waitForSelector('main h1');
+ assert.equal(await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop),position,'menu scroll persists on reload');
+ const activeAfter=await page.locator('#sidebar [aria-current="page"]').boundingBox();assert.ok(Math.abs(activeBefore.y-activeAfter.y)<1,'taxes remains at the same menu height');
+ await page.evaluate(()=>render());assert.equal(await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop),position,'rerender preserves menu position');
+ await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop=e.scrollHeight);const manualPosition=await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop);await page.evaluate(()=>render());assert.equal(await page.locator('#sidebar .nav').evaluate(e=>e.scrollTop),manualPosition,'manual scroll is not overridden by selected item');
+ console.log('PASS sidebar: scroll and selected-item position persist across reload and rerenders');
  await page.setViewportSize({width:1280,height:1000});
  await page.goto(base+'/#tasks');
  await page.getByRole('button',{name:'Создать задачу',exact:true}).first().click();

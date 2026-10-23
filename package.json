@@ -8,12 +8,16 @@
     "start": "node server.mjs",
     "dev": "node --watch server.mjs",
     "check": "node scripts/check.mjs",
-    "test": "npm run test:rnp && node scripts/browser-test.mjs && node scripts/reports-test.mjs && node scripts/economics-test.mjs && node scripts/inventory-test.mjs",
+    "test": "npm run test:rnp && node scripts/browser-test.mjs && node scripts/reports-test.mjs && node scripts/economics-test.mjs && node scripts/inventory-test.mjs && node scripts/demo-test.mjs",
     "test:reports": "node scripts/reports-test.mjs",
     "test:unit": "node scripts/economics-test.mjs",
     "test:inventory": "node scripts/inventory-test.mjs",
     "test:rnp": "node scripts/rnp-reconciliation-test.mjs && node scripts/rnp-store-test.mjs",
-    "rnp:import": "node scripts/rnp-import.mjs"
+    "rnp:import": "node scripts/rnp-import.mjs",
+    "build:demo": "node scripts/build-demo.mjs",
+    "preview:demo": "node scripts/preview-demo.mjs",
+    "publish:demo": "node scripts/publish-demo.mjs",
+    "test:demo": "node scripts/demo-test.mjs"
   },
   "engines": {
     "node": ">=20"

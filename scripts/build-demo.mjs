@@ -1,0 +1,15 @@
+import { readFile, writeFile, mkdir, rm, copyFile } from 'node:fs/promises';
+const output=new URL('../dist/',import.meta.url);
+await rm(output,{recursive:true,force:true});
+await mkdir(new URL('api/',output),{recursive:true});
+const html=await readFile(new URL('../index.html',import.meta.url),'utf8');
+await writeFile(new URL('index.html',output),html.replace('<meta charset="UTF-8">','<meta charset="UTF-8">\n<meta name="brandos-static-demo" content="true">\n<meta name="robots" content="noindex, nofollow">'));
+const inventory=JSON.parse(await readFile(new URL('../fixtures/inventory-demo.json',import.meta.url),'utf8'));
+if(inventory.mode!=='demo')throw new Error('Public demo requires explicitly synthetic inventory');
+inventory.updatedAt=new Date().toISOString();
+const snapshots={inventory,economics:{version:1,mode:'disconnected',rows:[],from:null,to:null,updatedAt:null},rnp:{version:1,mode:'disconnected',cells:[],audit:[],imports:[]}};
+for(const [name,payload]of Object.entries(snapshots))await writeFile(new URL('api/'+name+'.json',output),JSON.stringify(payload)+'\n');
+await writeFile(new URL('.nojekyll',output),'');
+await writeFile(new URL('.brandos-demo',output),'BrandOS static demo v1\n');
+await copyFile(new URL('../LICENSE-Inter.txt',import.meta.url),new URL('LICENSE-Inter.txt',output));
+console.log('Built dist/: static dashboard, embedded fonts and demo-only JSON; no server data or credentials.');
